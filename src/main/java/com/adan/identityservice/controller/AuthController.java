@@ -34,7 +34,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public String addNewUser(@RequestBody UserCredential user) {
-        return service.saveUser(user); // Default role will be assigned here
+        return service.saveUser(user);
     }
 
     @PostMapping("/login")

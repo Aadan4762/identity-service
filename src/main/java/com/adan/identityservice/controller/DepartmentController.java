@@ -1,6 +1,5 @@
 package com.adan.identityservice.controller;
 
-
 import com.adan.identityservice.dto.APIResponse;
 import com.adan.identityservice.dto.DepartmentRequest;
 import com.adan.identityservice.dto.DepartmentResponse;
@@ -12,10 +11,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
-
-
 
 @RestController
 @RequestMapping("/api/v2/department")
@@ -25,7 +23,8 @@ public class DepartmentController {
     private final DepartmentService departmentService;
 
     @PostMapping("/create")
-    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'HeadTeacher')")
+
     public ResponseEntity<String> createDepartment(@RequestBody @Validated DepartmentRequest departmentRequest) {
         try {
             departmentService.addDepartment(departmentRequest);
@@ -37,12 +36,13 @@ public class DepartmentController {
     }
 
     @GetMapping("/all")
-    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'HeadTeacher')")
     public List<DepartmentResponse> getAllDepartment() {
         return departmentService.getAllDepartment();
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'HeadTeacher')")
     public ResponseEntity<Object> getDepartmentById(@PathVariable int id) {
         try {
             DepartmentResponse department = departmentService.getDepartmentById(id);
@@ -53,6 +53,7 @@ public class DepartmentController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'HeadTeacher')")
     public ResponseEntity<String> updateDepartmentById(@PathVariable int id, @RequestBody DepartmentRequest departmentRequest) {
         try {
             boolean isUpdated = departmentService.updateDepartment(id, departmentRequest);
@@ -67,7 +68,7 @@ public class DepartmentController {
     }
 
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<String> deleteDepartmentById(@PathVariable int id) {
         try {
             boolean isDeleted = departmentService.deleteDepartmentById(id);
@@ -82,18 +83,21 @@ public class DepartmentController {
     }
 
     @GetMapping("/sort/{field}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'HeadTeacher')")
     public APIResponse<List<Department>> getDepartmentsWithSort(@PathVariable String field) {
         List<Department> allDepartments = departmentService.findDepartmentsWithSorting(field);
         return new APIResponse<>(allDepartments.size(), allDepartments);
     }
 
     @GetMapping("/pagination/{offset}/{pageSize}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'HeadTeacher')")
     public APIResponse<Page<Department>> getDepartmentsWithPagination(@PathVariable int offset, @PathVariable int pageSize) {
         Page<Department> departmentsWithPagination = departmentService.findDepartmentsWithPagination(offset, pageSize);
         return new APIResponse<>(departmentsWithPagination.getSize(), departmentsWithPagination);
     }
 
     @GetMapping("/paginationAndSort/{offset}/{pageSize}/{field}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'HeadTeacher')")
     public APIResponse<Page<Department>> getDepartmentsWithPaginationAndSort(@PathVariable int offset, @PathVariable int pageSize, @PathVariable String field) {
         Page<Department> departmentsWithPagination = departmentService.findDepartmentsWithPaginationAndSorting(offset, pageSize, field);
         return new APIResponse<>(departmentsWithPagination.getSize(), departmentsWithPagination);

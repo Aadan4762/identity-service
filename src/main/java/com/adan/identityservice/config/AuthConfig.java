@@ -42,14 +42,16 @@ public class AuthConfig {
                         "/auth/register",
                         "/auth/validate",
                         "/auth/role",
-                        "/auth/logout" // Ensure logout API is publicly accessible
+                        "/auth/logout" // Open to public
                 ).permitAll()
+                .requestMatchers("/api/v2/department/**").hasAnyAuthority("ADMIN", "HeadTeacher")// Department API requires specific roles
                 .anyRequest().authenticated()
                 .and()
                 .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // Use valid filter class
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
+
 
 
     @Bean
