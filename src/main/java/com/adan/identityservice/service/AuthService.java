@@ -20,7 +20,7 @@ public class AuthService {
     @Autowired
     private JwtService jwtService;
 
-    // Save user with default role
+
     public String saveUser(UserCredential credential) {
         if (credential.getFirstName() == null || credential.getFirstName().isEmpty()) {
             return "First name is required";
@@ -39,30 +39,20 @@ public class AuthService {
     }
 
 
-    // Generate JWT token
     public Map<String, String> login(String username) {
         UserCredential user = repository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
-
-        // Generate access and refresh tokens
         String accessToken = jwtService.login(username, user.getRole(), user.getFirstName(), user.getLastName());
         String refreshToken = jwtService.generateRefreshToken(username);
-
-        // Return both tokens
         Map<String, String> tokens = new HashMap<>();
         tokens.put("accessToken", accessToken);
         tokens.put("refreshToken", refreshToken);
         return tokens;
     }
 
-
-
-
-    // Validate JWT token
     public void validateToken(String token) {
         jwtService.validateToken(token);
     }
 
-    // Update role with validation
     public String updateRole(String username, String role) {
         List<String> allowedRoles = Arrays.asList("USER", "ADMIN", "HeadTeacher");
         if (!allowedRoles.contains(role)) {
