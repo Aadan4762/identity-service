@@ -42,7 +42,7 @@ public class AuthConfig {
                         "/auth/register",
                         "/auth/validate",
                         "/auth/role",
-                        "/auth/logout" // Open to public
+                        "/auth/logout"
                 ).permitAll()
                 .requestMatchers("/api/v2/department/**").hasAnyAuthority("ADMIN", "HeadTeacher")// Department API requires specific roles
                 .anyRequest().authenticated()

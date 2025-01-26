@@ -24,12 +24,12 @@ public class JwtService {
         claims.put("role", role);
         claims.put("firstName", firstName);
         claims.put("lastName", lastName);
-        return createToken(claims, userName, 1000 * 60 * 15); // 15 minutes for access token
+        return createToken(claims, userName, 1000 * 60 * 15);
     }
 
     public String generateRefreshToken(String userName) {
         Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, userName, 1000 * 60 * 60 * 24); // 24 hours for refresh token
+        return createToken(claims, userName, 1000 * 60 * 60 * 24);
     }
 
     private String createToken(Map<String, Object> claims, String userName, long duration) {
