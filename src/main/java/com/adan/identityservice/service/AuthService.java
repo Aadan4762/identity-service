@@ -3,6 +3,8 @@ package com.adan.identityservice.service;
 import com.adan.identityservice.entity.UserCredential;
 import com.adan.identityservice.repository.UserCredentialRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -20,32 +22,47 @@ public class AuthService {
     @Autowired
     private JwtService jwtService;
 
+    public ResponseEntity<Map<String, String>> saveUser(UserCredential credential) {
+        Map<String, String> response = new HashMap<>();
 
-    public String saveUser(UserCredential credential) {
         if (credential.getFirstName() == null || credential.getFirstName().isEmpty()) {
-            return "First name is required";
+            response.put("message", "First name is required");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
         if (credential.getLastName() == null || credential.getLastName().isEmpty()) {
-            return "Last name is required";
+            response.put("message", "Last name is required");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
         if (credential.getPassword() == null || credential.getPassword().isEmpty()) {
-            return "Password is required";
+            response.put("message", "Password is required");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
+        if (credential.getConfirmPassword() == null || credential.getConfirmPassword().isEmpty()) {
+            response.put("message", "Confirm Password is required");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+        if (!credential.getPassword().equals(credential.getConfirmPassword())) {
+            response.put("message", "Password and Confirm Password must match");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
         credential.setPassword(passwordEncoder.encode(credential.getPassword()));
         credential.setRole("USER");
         repository.save(credential);
 
-        return "User added to the system with role USER";
+        response.put("message", "User added to the system with role USER");
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-
     public Map<String, String> login(String username) {
-        UserCredential user = repository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
+        UserCredential user = repository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         String accessToken = jwtService.login(username, user.getRole(), user.getFirstName(), user.getLastName());
         String refreshToken = jwtService.generateRefreshToken(username);
         Map<String, String> tokens = new HashMap<>();
         tokens.put("accessToken", accessToken);
         tokens.put("refreshToken", refreshToken);
+        tokens.put("message", "Login successful");
         return tokens;
     }
 
@@ -69,3 +86,4 @@ public class AuthService {
         }
     }
 }
+

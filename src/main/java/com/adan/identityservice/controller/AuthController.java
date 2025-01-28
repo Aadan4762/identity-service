@@ -7,6 +7,8 @@ import com.adan.identityservice.service.AuthService;
 import com.adan.identityservice.service.JwtService;
 import com.adan.identityservice.service.TokenBlacklistService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -24,8 +26,10 @@ public class AuthController {
 
     @Autowired
     private JwtService jwtService;
+
     @Autowired
     private UserCredentialRepository repository;
+
     @Autowired
     private AuthService service;
 
@@ -33,56 +37,67 @@ public class AuthController {
     private AuthenticationManager authenticationManager;
 
     @PostMapping("/register")
-    public String addNewUser(@RequestBody UserCredential user) {
+    public ResponseEntity<Map<String, String>> addNewUser(@RequestBody UserCredential user) {
         return service.saveUser(user);
     }
 
     @PostMapping("/login")
-    public Map<String, String> getToken(@RequestBody AuthRequest authRequest) {
-        Authentication authenticate = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
-        if (authenticate.isAuthenticated()) {
-            return service.login(authRequest.getUsername());
-        } else {
-            throw new RuntimeException("Invalid access");
+    public ResponseEntity<Map<String, String>> getToken(@RequestBody AuthRequest authRequest) {
+        try {
+            Authentication authenticate = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
+            if (authenticate.isAuthenticated()) {
+                return ResponseEntity.ok(service.login(authRequest.getUsername()));
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Invalid credentials"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Invalid credentials"));
         }
     }
 
     @PostMapping("/refresh")
-    public Map<String, String> refreshAccessToken(@RequestParam String refreshToken) {
-        String username = jwtService.validateAndGetUsername(refreshToken);
-        UserCredential user = repository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
-        String newAccessToken = jwtService.login(username, user.getRole(), user.getFirstName(), user.getLastName());
-        Map<String, String> response = new HashMap<>();
-        response.put("accessToken", newAccessToken);
-        return response;
+    public ResponseEntity<Map<String, String>> refreshAccessToken(@RequestParam String refreshToken) {
+        try {
+            String username = jwtService.validateAndGetUsername(refreshToken);
+            UserCredential user = repository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            String newAccessToken = jwtService.login(username, user.getRole(), user.getFirstName(), user.getLastName());
+            return ResponseEntity.ok(Map.of("accessToken", newAccessToken, "message", "Access token refreshed successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", "Invalid refresh token: " + e.getMessage()));
+        }
     }
 
-
-
     @GetMapping("/validate")
-    public String validateToken(@RequestParam("token") String token) {
+    public ResponseEntity<Map<String, String>> validateToken(@RequestParam("token") String token) {
         try {
             service.validateToken(token);
-            return "Token is valid";
+            return ResponseEntity.ok(Map.of("message", "Token is valid"));
         } catch (Exception e) {
-            return "Token validation failed: " + e.getMessage();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Token validation failed: " + e.getMessage()));
         }
     }
 
     @PostMapping("/logout")
-    public String logout(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<Map<String, String>> logout(@RequestHeader("Authorization") String token) {
         if (token != null && token.startsWith("Bearer ")) {
             token = token.substring(7);
             tokenBlacklistService.addToken(token);
-            return "Logged out successfully!";
+            return ResponseEntity.ok(Map.of("message", "Logged out successfully!"));
         }
-        return "Invalid request!";
+        return ResponseEntity.badRequest().body(Map.of("message", "Invalid request!"));
     }
 
-
     @PutMapping("/role")
-    public String updateRole(@RequestParam("username") String username, @RequestParam("role") String role) {
-        return service.updateRole(username, role);
+    public ResponseEntity<Map<String, String>> updateRole(@RequestParam("username") String username, @RequestParam("role") String role) {
+        String result = service.updateRole(username, role);
+        if (result.startsWith("User role updated")) {
+            return ResponseEntity.ok(Map.of("message", result));
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", result));
+        }
     }
 }
