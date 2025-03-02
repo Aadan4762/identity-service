@@ -91,6 +91,7 @@ public class AuthController {
         return ResponseEntity.badRequest().body(Map.of("message", "Invalid request!"));
     }
 
+
     @PutMapping("/role")
     public ResponseEntity<Map<String, String>> updateRole(@RequestParam("username") String username, @RequestParam("role") String role) {
         String result = service.updateRole(username, role);
