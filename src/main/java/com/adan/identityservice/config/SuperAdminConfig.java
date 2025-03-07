@@ -31,7 +31,7 @@ public class SuperAdminConfig {
                 superAdmin.setUsername("superadmin");
                 superAdmin.setEmail("superadmin@gmail.com");
                 superAdmin.setPassword(passwordEncoder.encode("Admin@123")); // Strong default password
-                superAdmin.setRole(Role.ADMIN); // Assuming ADMIN is the highest role
+                superAdmin.setRole(Role.SUPER_ADMIN); // Assuming ADMIN is the highest role
 
                 userRepository.save(superAdmin);
                 System.out.println("Super Admin account created successfully!");
