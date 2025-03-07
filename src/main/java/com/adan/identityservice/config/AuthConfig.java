@@ -42,7 +42,10 @@ public class AuthConfig {
                         "/auth/register",
                         "/auth/validate",
                         "/auth/role",
-                        "/auth/logout"
+                        "/auth/logout",
+                        "/v3/api-docs/**", // Allow access to OpenAPI docs
+                        "/swagger-ui.html", // Allow access to Swagger UI
+                        "/swagger-ui/**" // Allow access to Swagger resources
                 ).permitAll()
                 .requestMatchers("/api/v2/department/**").hasAnyAuthority("ADMIN", "HeadTeacher")// Department API requires specific roles
                 .anyRequest().authenticated()

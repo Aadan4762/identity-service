@@ -17,7 +17,7 @@ public class CustomUserDetails implements UserDetails {
     public CustomUserDetails(UserCredential userCredential) {
         this.username = userCredential.getUsername();
         this.password = userCredential.getPassword();
-        this.role = userCredential.getRole();
+        this.role = String.valueOf(userCredential.getRole());
     }
 
     @Override
