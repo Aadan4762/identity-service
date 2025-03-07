@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -128,6 +129,7 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "Invalid role or username")
     })
     @PutMapping("/role")
+    @PreAuthorize("hasAuthority('SUPER_ADMIN')") // Match the authority format used in your security config
     public ResponseEntity<Map<String, String>> updateRole(@RequestParam("username") String username, @RequestParam("role") String roleStr) {
         String result = service.updateRole(username, roleStr);
         if (result.startsWith("User role updated")) {
