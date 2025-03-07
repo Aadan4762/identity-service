@@ -29,7 +29,6 @@ public class AuthService {
     public ResponseEntity<Map<String, String>> registerUser(UserRegistrationDTO registrationDTO) {
         Map<String, String> response = new HashMap<>();
 
-        // Basic validations
         if (registrationDTO.getFirstName() == null || registrationDTO.getFirstName().isEmpty()) {
             response.put("message", "First name is required");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
@@ -46,15 +45,11 @@ public class AuthService {
             response.put("message", "Email is required");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
-
-        // Email validation for Gmail
         String emailRegex = "^[a-zA-Z0-9._%+-]+@gmail\\.com$";
         if (!Pattern.matches(emailRegex, registrationDTO.getEmail())) {
             response.put("message", "Email must be a valid Gmail address");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
-
-        // Password validations
         if (registrationDTO.getPassword() == null || registrationDTO.getPassword().isEmpty()) {
             response.put("message", "Password is required");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
@@ -67,35 +62,27 @@ public class AuthService {
             response.put("message", "Password and Confirm Password must match");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
-
-        // Check if username already exists
         if (repository.existsByUsername(registrationDTO.getUsername())) {
             response.put("message", "Username already exists");
             return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         }
-
-        // Check if email already exists
         if (repository.existsByEmail(registrationDTO.getEmail())) {
             response.put("message", "Email already exists");
             return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         }
 
-        // Create and save the user entity
         UserCredential user = new UserCredential();
         user.setFirstName(registrationDTO.getFirstName());
         user.setLastName(registrationDTO.getLastName());
         user.setUsername(registrationDTO.getUsername());
         user.setEmail(registrationDTO.getEmail());
         user.setPassword(passwordEncoder.encode(registrationDTO.getPassword()));
-        // Role is already set by default in the UserCredential class
 
         try {
             repository.save(user);
             response.put("message", "User added to the system with role USER");
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (DataIntegrityViolationException e) {
-            // This is a fallback in case the unique constraint is violated
-            // (though our explicit checks above should prevent this)
             response.put("message", "Username or email already exists");
             return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         }
@@ -106,9 +93,7 @@ public class AuthService {
         UserCredential user = repository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Get role value from the enum
         String roleValue = user.getRole().getValue();
-
         String accessToken = jwtService.login(username, roleValue, user.getFirstName(), user.getLastName());
         String refreshToken = jwtService.generateRefreshToken(username);
 

@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 public enum Role {
     USER("USER"),
     ADMIN("ADMIN"),
+    SUPER_ADMIN("SUPER_ADMIN"),
     HEAD_TEACHER("HeadTeacher");
 
     private final String value;

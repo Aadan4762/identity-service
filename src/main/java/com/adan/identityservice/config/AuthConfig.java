@@ -8,6 +8,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -21,6 +22,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
+//@EnableMethodSecurity(prePostEnabled = true)
 public class AuthConfig {
 
     @Autowired
@@ -41,13 +43,14 @@ public class AuthConfig {
                         "/auth/refresh",
                         "/auth/register",
                         "/auth/validate",
-                        "/auth/role",
+                      //  "/auth/role",
                         "/auth/logout",
                         "/v3/api-docs/**", // Allow access to OpenAPI docs
                         "/swagger-ui.html", // Allow access to Swagger UI
                         "/swagger-ui/**" // Allow access to Swagger resources
                 ).permitAll()
                 .requestMatchers("/api/v2/department/**").hasAnyAuthority("ADMIN", "HeadTeacher")// Department API requires specific roles
+                .requestMatchers("/auth/role").hasAuthority("SUPER_ADMIN")
                 .anyRequest().authenticated()
                 .and()
                 .authenticationProvider(authenticationProvider())
