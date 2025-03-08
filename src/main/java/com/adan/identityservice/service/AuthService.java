@@ -15,16 +15,18 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 @Service
+
 public class AuthService {
 
     @Autowired
     private UserCredentialRepository repository;
-
     @Autowired
     private PasswordEncoder passwordEncoder;
-
     @Autowired
     private JwtService jwtService;
+    @Autowired
+    private EmailService emailService;
+
 
     public ResponseEntity<Map<String, String>> registerUser(UserRegistrationDTO registrationDTO) {
         Map<String, String> response = new HashMap<>();
@@ -80,6 +82,13 @@ public class AuthService {
 
         try {
             repository.save(user);
+
+            // Send confirmation email
+            emailService.sendRegistrationConfirmationEmail(
+                    user.getEmail(),
+                    user.getUsername()
+            );
+
             response.put("message", "User added to the system with role USER");
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (DataIntegrityViolationException e) {
@@ -114,8 +123,22 @@ public class AuthService {
             Optional<UserCredential> optionalUser = repository.findByUsername(username);
             if (optionalUser.isPresent()) {
                 UserCredential user = optionalUser.get();
+
+                // Check if the role is actually changing
+                boolean isRoleChanged = user.getRole() == null || !user.getRole().equals(role);
+
                 user.setRole(role);
                 repository.save(user);
+
+                // Send email notification only if role has changed
+                if (isRoleChanged) {
+                    emailService.sendRoleAssignmentEmail(
+                            user.getEmail(),
+                            user.getUsername(),
+                            role.getValue()
+                    );
+                }
+
                 return "User role updated to " + role.getValue();
             } else {
                 return "User not found";
@@ -124,5 +147,6 @@ public class AuthService {
             return e.getMessage();
         }
     }
+
 }
 

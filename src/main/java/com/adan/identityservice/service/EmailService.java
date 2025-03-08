@@ -1,0 +1,6 @@
+package com.adan.identityservice.service;
+
+public interface EmailService {
+    void sendRegistrationConfirmationEmail(String to, String username);
+    void sendRoleAssignmentEmail(String to, String username, String role);
+}
