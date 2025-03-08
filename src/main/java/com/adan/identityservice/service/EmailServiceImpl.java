@@ -1,0 +1,105 @@
+package com.adan.identityservice.service;
+
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.stereotype.Service;
+
+@Service
+public class EmailServiceImpl implements EmailService {
+
+    @Autowired
+    private JavaMailSender emailSender;
+
+    @Override
+    public void sendRegistrationConfirmationEmail(String to, String username) {
+        try {
+            MimeMessage message = emailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+            helper.setTo(to);
+            helper.setSubject("Registration Confirmation");
+
+            String emailContent =
+                    "<html><body>" +
+                            "<h2>Registration Confirmation</h2>" +
+                            "<p>Dear " + username + ",</p>" +
+                            "<p>Your registration for our system is successful.</p>" +
+                            "<p>Thank you for joining us!</p>" +
+                            "<p>Regards,<br/>Your Application Team</p>" +
+                            "</body></html>";
+
+            helper.setText(emailContent, true); // true indicates HTML content
+
+            emailSender.send(message);
+            System.out.println("Registration confirmation email sent to: " + to);
+        } catch (MessagingException e) {
+            System.err.println("Failed to send registration email: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void sendRoleAssignmentEmail(String to, String username, String role) {
+        try {
+            MimeMessage message = emailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+            helper.setTo(to);
+            helper.setSubject("Role Assignment Notification");
+
+            String emailContent =
+                    "<html><body>" +
+                            "<h2>Role Assignment Notification</h2>" +
+                            "<p>Dear " + username + ",</p>" +
+                            "<p>We are pleased to inform you that you have been assigned the role of <strong>" + role + "</strong> in our system.</p>" +
+                            "<p>This role grants you the following privileges:</p>";
+
+            // Add role-specific details
+            switch (role) {
+                case "ADMIN":
+                    emailContent += "<ul>" +
+                            "<li>Manage user accounts</li>" +
+                            "<li>Access system settings</li>" +
+                            "<li>Generate reports</li>" +
+                            "<li>All USER privileges</li>" +
+                            "</ul>";
+                    break;
+                case "SUPER_ADMIN":
+                    emailContent += "<ul>" +
+                            "<li>Full system administration rights</li>" +
+                            "<li>Manage all user roles</li>" +
+                            "<li>Configure system parameters</li>" +
+                            "<li>All ADMIN privileges</li>" +
+                            "</ul>";
+                    break;
+                case "HEAD_TEACHER":
+                    emailContent += "<ul>" +
+                            "<li>Manage curriculum content</li>" +
+                            "<li>Review and approve educational materials</li>" +
+                            "<li>Access teacher and student performance reports</li>" +
+                            "</ul>";
+                    break;
+                default: // USER
+                    emailContent += "<ul>" +
+                            "<li>Access basic system features</li>" +
+                            "<li>Update your profile information</li>" +
+                            "<li>View available resources</li>" +
+                            "</ul>";
+            }
+
+            emailContent += "<p>If you have any questions about your new role, please contact the system administrator.</p>" +
+                    "<p>Thank you!</p>" +
+                    "<p>Regards,<br/>Your Application Team</p>" +
+                    "</body></html>";
+
+            helper.setText(emailContent, true);
+
+            emailSender.send(message);
+            System.out.println("Role assignment email sent to: " + to);
+        } catch (MessagingException e) {
+            System.err.println("Failed to send role assignment email: " + e.getMessage());
+        }
+    }
+}
