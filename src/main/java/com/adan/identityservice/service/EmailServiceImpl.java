@@ -102,4 +102,36 @@ public class EmailServiceImpl implements EmailService {
             System.err.println("Failed to send role assignment email: " + e.getMessage());
         }
     }
+    @Override
+    public void sendOtpEmail(String to, String username, String otpCode) {
+        try {
+            MimeMessage message = emailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+            helper.setTo(to);
+            helper.setSubject("Your One-Time Password (OTP)");
+
+            String emailContent =
+                    "<html><body>" +
+                            "<h2>Two-Factor Authentication</h2>" +
+                            "<p>Dear " + username + ",</p>" +
+                            "<p>Your one-time password (OTP) for login is:</p>" +
+                            "<div style='background-color: #f2f2f2; padding: 15px; font-size: 24px; " +
+                            "font-weight: bold; text-align: center; letter-spacing: 5px; margin: 20px 0;'>" +
+                            otpCode +
+                            "</div>" +
+                            "<p>This code is valid for 5 minutes. Please do not share this code with anyone.</p>" +
+                            "<p>If you did not request this code, please ignore this email and consider changing your password.</p>" +
+                            "<p>Regards,<br/>Your Application Team</p>" +
+                            "</body></html>";
+
+            helper.setText(emailContent, true);
+
+            emailSender.send(message);
+            System.out.println("OTP email sent to: " + to);
+        } catch (MessagingException e) {
+            System.err.println("Failed to send OTP email: " + e.getMessage());
+        }
+    }
 }
+

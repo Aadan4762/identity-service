@@ -40,6 +40,9 @@ public class AuthConfig {
                 .authorizeHttpRequests()
                 .requestMatchers(
                         "/auth/login",
+                        "/auth/login/initiate",
+                        "/auth/login/verify-otp",
+                        "/auth/login/resend-otp",
                         "/auth/refresh",
                         "/auth/register",
                         "/auth/validate",
