@@ -1,5 +1,6 @@
 package com.adan.identityservice.service;
 
+import com.adan.identityservice.dto.AuthRequest;
 import com.adan.identityservice.dto.UserRegistrationDTO;
 import com.adan.identityservice.entity.Role;
 import com.adan.identityservice.entity.UserCredential;
@@ -26,6 +27,9 @@ public class AuthService {
     private JwtService jwtService;
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private TwoFactorAuthService twoFactorAuthService;
 
 
     public ResponseEntity<Map<String, String>> registerUser(UserRegistrationDTO registrationDTO) {
@@ -148,5 +152,100 @@ public class AuthService {
         }
     }
 
+    /**
+     * Step 1 of login: Validate credentials and send OTP
+     */
+    public ResponseEntity<Map<String, String>> login(AuthRequest loginRequest) {
+        Map<String, String> response = new HashMap<>();
+
+        try {
+            Optional<UserCredential> userOpt = repository.findByUsername(loginRequest.getUsername());
+
+            if (userOpt.isEmpty()) {
+                response.put("message", "Invalid username or password");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+
+            UserCredential user = userOpt.get();
+
+            // Validate password
+            if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+                response.put("message", "Invalid username or password");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+
+            // Generate and send OTP
+            twoFactorAuthService.generateAndSendOtp(user.getUsername(), user.getEmail());
+
+            response.put("message", "OTP sent to your registered email");
+            response.put("username", user.getUsername());
+            response.put("status", "OTP_REQUIRED");
+
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (Exception e) {
+            response.put("message", "Login failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * Step 2 of login: Verify OTP and issue tokens
+     */
+    public ResponseEntity<Map<String, String>> verifyOtpAndLogin(String username, String otpCode) {
+        Map<String, String> response = new HashMap<>();
+
+        // Validate OTP
+        if (!twoFactorAuthService.validateOtp(username, otpCode)) {
+            response.put("message", "Invalid or expired OTP");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        try {
+            // Generate tokens
+            UserCredential user = repository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            String roleValue = user.getRole() != null ? user.getRole().getValue() : "USER";
+            String accessToken = jwtService.login(username, roleValue, user.getFirstName(), user.getLastName());
+            String refreshToken = jwtService.generateRefreshToken(username);
+
+            response.put("accessToken", accessToken);
+            response.put("refreshToken", refreshToken);
+            response.put("message", "Login successful");
+
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (Exception e) {
+            response.put("message", "Login failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+
+    // Method to resend OTP if needed
+    public ResponseEntity<Map<String, String>> resendOtp(String username) {
+        Map<String, String> response = new HashMap<>();
+
+        try {
+            Optional<UserCredential> userOpt = repository.findByUsername(username);
+
+            if (userOpt.isEmpty()) {
+                response.put("message", "User not found");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+            UserCredential user = userOpt.get();
+
+            // Generate and send new OTP
+            twoFactorAuthService.generateAndSendOtp(user.getUsername(), user.getEmail());
+
+            response.put("message", "New OTP sent to your registered email");
+            response.put("username", user.getUsername());
+
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (Exception e) {
+            response.put("message", "Failed to resend OTP: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
 }
 

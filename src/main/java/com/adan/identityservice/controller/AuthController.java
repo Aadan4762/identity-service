@@ -1,6 +1,7 @@
 package com.adan.identityservice.controller;
 
 import com.adan.identityservice.dto.AuthRequest;
+import com.adan.identityservice.dto.OtpVerificationDTO;
 import com.adan.identityservice.dto.UserRegistrationDTO;
 import com.adan.identityservice.entity.UserCredential;
 import com.adan.identityservice.repository.UserCredentialRepository;
@@ -73,6 +74,44 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Invalid credentials"));
         }
     }
+    /**
+     * Step 1: Initiate login with username and password.
+     * This will validate credentials and send OTP if valid.
+     */
+    @Operation(summary = "Initiate login with 2FA", description = "Step 1: Validate credentials and send OTP if valid")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Credentials validated, OTP sent"),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials")
+    })
+    @PostMapping("/login/initiate")
+    public ResponseEntity<Map<String, String>> initiateLogin(@RequestBody AuthRequest authRequest) {
+        return service.login(authRequest);
+    }
+
+    /**
+     * Step 2: Verify OTP and complete login process.
+     * This will validate OTP and generate tokens if valid.
+     */
+    @Operation(summary = "Verify OTP and complete login", description = "Step 2: Validate OTP and generate tokens if valid")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "OTP verified, tokens generated"),
+            @ApiResponse(responseCode = "401", description = "Invalid or expired OTP")
+    })
+    @PostMapping("/login/verify-otp")
+    public ResponseEntity<Map<String, String>> verifyOtpAndLogin(@RequestBody OtpVerificationDTO verificationDTO) {
+        return service.verifyOtpAndLogin(verificationDTO.getUsername(), verificationDTO.getOtpCode());
+    }
+
+    @Operation(summary = "Resend OTP", description = "Resend OTP if it was not received or expired")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "New OTP sent"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    @PostMapping("/login/resend-otp")
+    public ResponseEntity<Map<String, String>> resendOtp(@RequestParam String username) {
+        return service.resendOtp(username);
+    }
+
 
     @Operation(summary = "Refresh access token", description = "Get a new access token using a valid refresh token")
     @ApiResponses(value = {
