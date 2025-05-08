@@ -29,7 +29,7 @@ public class SuperAdminConfig {
                 superAdmin.setFirstName("Super");
                 superAdmin.setLastName("Admin");
                 superAdmin.setUsername("superadmin");
-                superAdmin.setEmail("superadmin@gmail.com");
+                superAdmin.setEmail("gadaffigadaffi957@gmail.com");
                 superAdmin.setPassword(passwordEncoder.encode("Admin@123")); // Strong default password
                 superAdmin.setRole(Role.SUPER_ADMIN); // Assuming ADMIN is the highest role
 
