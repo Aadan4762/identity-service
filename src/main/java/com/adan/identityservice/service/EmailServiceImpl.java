@@ -39,6 +39,39 @@ public class EmailServiceImpl implements EmailService {
             System.err.println("Failed to send registration email: " + e.getMessage());
         }
     }
+    @Override
+    public void sendPasswordChangeEmail(String to, String username) {
+        try {
+            MimeMessage message = emailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+            helper.setTo(to);
+            helper.setSubject("Password Change Notification");
+
+            String emailContent =
+                    "<html><body>" +
+                            "<h2>Password Change Notification</h2>" +
+                            "<p>Dear " + username + ",</p>" +
+                            "<p>Your password has been successfully changed.</p>" +
+                            "<p>If you did not initiate this password change, please contact our support team immediately.</p>" +
+                            "<p>For security reasons, you may want to:</p>" +
+                            "<ul>" +
+                            "<li>Log in with your new password</li>" +
+                            "<li>Review your recent account activity</li>" +
+                            "<li>Update your password on any other devices you use</li>" +
+                            "</ul>" +
+                            "<p>Thank you for helping us keep your account secure.</p>" +
+                            "<p>Regards,<br/>Your Application Team</p>" +
+                            "</body></html>";
+
+            helper.setText(emailContent, true);
+
+            emailSender.send(message);
+            System.out.println("Password change email sent to: " + to);
+        } catch (MessagingException e) {
+            System.err.println("Failed to send password change email: " + e.getMessage());
+        }
+    }
 
     @Override
     public void sendRoleAssignmentEmail(String to, String username, String role) {

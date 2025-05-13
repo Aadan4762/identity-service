@@ -1,6 +1,7 @@
 package com.adan.identityservice.service;
 
 import com.adan.identityservice.dto.AuthRequest;
+import com.adan.identityservice.dto.PasswordChangeDTO;
 import com.adan.identityservice.dto.UserRegistrationDTO;
 import com.adan.identityservice.entity.Role;
 import com.adan.identityservice.entity.UserCredential;
@@ -244,6 +245,56 @@ public class AuthService {
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (Exception e) {
             response.put("message", "Failed to resend OTP: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    public ResponseEntity<Map<String, String>> changePassword(PasswordChangeDTO passwordChangeDTO) {
+        Map<String, String> response = new HashMap<>();
+
+        // Validate input
+        if (passwordChangeDTO.getUsername() == null || passwordChangeDTO.getUsername().isEmpty()) {
+            response.put("message", "Username is required");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+        if (passwordChangeDTO.getCurrentPassword() == null || passwordChangeDTO.getCurrentPassword().isEmpty()) {
+            response.put("message", "Current password is required");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+        if (passwordChangeDTO.getNewPassword() == null || passwordChangeDTO.getNewPassword().isEmpty()) {
+            response.put("message", "New password is required");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+        if (passwordChangeDTO.getConfirmNewPassword() == null || passwordChangeDTO.getConfirmNewPassword().isEmpty()) {
+            response.put("message", "Confirm new password is required");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+        if (!passwordChangeDTO.getNewPassword().equals(passwordChangeDTO.getConfirmNewPassword())) {
+            response.put("message", "New password and confirm new password must match");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        try {
+            Optional<UserCredential> userOpt = repository.findByUsername(passwordChangeDTO.getUsername());
+            if (userOpt.isEmpty()) {
+                response.put("message", "User not found");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+            UserCredential user = userOpt.get();
+            if (!passwordEncoder.matches(passwordChangeDTO.getCurrentPassword(), user.getPassword())) {
+                response.put("message", "Current password is incorrect");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+            user.setPassword(passwordEncoder.encode(passwordChangeDTO.getNewPassword()));
+            repository.save(user);
+
+            emailService.sendPasswordChangeEmail(user.getEmail(), user.getUsername());
+
+            response.put("message", "Password changed successfully");
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (Exception e) {
+            response.put("message", "Failed to change password: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
