@@ -2,6 +2,7 @@ package com.adan.identityservice.controller;
 
 import com.adan.identityservice.dto.AuthRequest;
 import com.adan.identityservice.dto.OtpVerificationDTO;
+import com.adan.identityservice.dto.PasswordChangeDTO;
 import com.adan.identityservice.dto.UserRegistrationDTO;
 import com.adan.identityservice.entity.UserCredential;
 import com.adan.identityservice.repository.UserCredentialRepository;
@@ -176,5 +177,17 @@ public class AuthController {
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", result));
         }
+    }
+
+    @Operation(summary = "Change password", description = "Change user password and send email notification")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Password changed successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input data"),
+            @ApiResponse(responseCode = "401", description = "Current password is incorrect"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    @PostMapping("/change-password")
+    public ResponseEntity<Map<String, String>> changePassword(@RequestBody PasswordChangeDTO passwordChangeDTO) {
+        return service.changePassword(passwordChangeDTO);
     }
 }
