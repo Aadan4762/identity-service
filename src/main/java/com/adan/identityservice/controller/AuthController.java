@@ -55,26 +55,26 @@ public class AuthController {
         return service.registerUser(registrationDTO);
     }
 
-    @Operation(summary = "User login", description = "Invalid user credentials")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully logged In"),
-            @ApiResponse(responseCode = "400", description = "Invalid user credentials")
-    })
-
-    @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> getToken(@RequestBody AuthRequest authRequest) {
-        try {
-            Authentication authenticate = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
-            if (authenticate.isAuthenticated()) {
-                return ResponseEntity.ok(service.login(authRequest.getUsername()));
-            } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Invalid credentials"));
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Invalid credentials"));
-        }
-    }
+//    @Operation(summary = "User login", description = "Invalid user credentials")
+//    @ApiResponses(value = {
+//            @ApiResponse(responseCode = "200", description = "Successfully logged In"),
+//            @ApiResponse(responseCode = "400", description = "Invalid user credentials")
+//    })
+//
+//    @PostMapping("/login")
+//    public ResponseEntity<Map<String, String>> getToken(@RequestBody AuthRequest authRequest) {
+//        try {
+//            Authentication authenticate = authenticationManager.authenticate(
+//                    new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
+//            if (authenticate.isAuthenticated()) {
+//                return ResponseEntity.ok(service.login(authRequest.getUsername()));
+//            } else {
+//                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Invalid credentials"));
+//            }
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Invalid credentials"));
+//        }
+//    }
     /**
      * Step 1: Initiate login with username and password.
      * This will validate credentials and send OTP if valid.
