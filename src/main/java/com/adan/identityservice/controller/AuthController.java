@@ -163,7 +163,7 @@ public class AuthController {
         return ResponseEntity.badRequest().body(Map.of("message", "Invalid request!"));
     }
 
-    @Operation(summary = "Update user role", description = "Update a user's role (requires ADMIN privileges)")
+    @Operation(summary = "Update user role", description = "Update a user's role (requires SUPER_ADMIN privileges)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User role updated successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid role or username")

@@ -11,6 +11,13 @@ spring:
       allowed-origins: http://localhost:3000
       allowed-methods: GET,POST,PUT,DELETE
       allowed-headers: "*"
+  data:
+    redis:
+      timeout: 2000ms
+      host: localhost
+      password:
+      port: 6379
+      database: 0
 
 eureka:
   client:
@@ -29,3 +36,24 @@ management:
 
 
 
+# Redis Configuration
+# Rate Limiting Configuration
+rate-limit:
+  key-prefix: "rate_limit:"
+  window-size-in-seconds: 300  # 5 minutes
+
+  auth-endpoints:
+    login-capacity: 5          # 5 login attempts per window
+    login-refill-rate: 1       # 1 token per minute
+    register-capacity: 3       # 3 registrations per window
+    register-refill-rate: 1    # 1 token per minute
+    otp-capacity: 10           # 10 OTP requests per window
+    otp-refill-rate: 2         # 2 tokens per minute
+    general-capacity: 50       # General auth operations
+    general-refill-rate: 10    # 10 tokens per minute
+
+  department-endpoints:
+    read-capacity: 100         # 100 read operations per window
+    read-refill-rate: 20       # 20 tokens per minute
+    write-capacity: 20         # 20 write operations per window
+    write-refill-rate: 4       # 4 tokens per minute
